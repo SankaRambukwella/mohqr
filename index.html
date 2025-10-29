@@ -1,599 +1,114 @@
 <!DOCTYPE html>
-<html lang="si">
+<html>
 <head>
-    <base target="_top">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>සෞඛ්‍ය අමාත්‍යාංශය - වාහන ගමන් බලපත්‍ර ස්කෑනර්</title>
-    <style>
-        :root {
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
-            --success: #059669;
-            --success-dark: #047857;
-            --warning: #d97706;
-            --error: #dc2626;
-            --gray-50: #f9fafb;
-            --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb;
-            --gray-300: #d1d5db;
-            --gray-400: #9ca3af;
-            --gray-500: #6b7280;
-            --gray-600: #4b5563;
-            --gray-700: #374151;
-            --gray-800: #1f2937;
-            --gray-900: #111827;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: var(--gray-800);
-            line-height: 1.6;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .app-container {
-            max-width: 480px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            overflow: hidden;
-        }
-
-        .app-header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            padding: 24px;
-            text-align: center;
-            position: relative;
-        }
-
-        .app-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--success), var(--warning));
-        }
-
-        .app-title {
-            font-size: 1.4rem;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .app-subtitle {
-            font-size: 0.9rem;
-            opacity: 0.9;
-            font-weight: 400;
-        }
-
-        .app-content {
-            padding: 24px;
-        }
-
-        .section {
-            margin-bottom: 28px;
-        }
-
-        .section-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--gray-700);
-            margin-bottom: 16px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--gray-100);
-        }
-
-        #reader {
-            border: 3px solid var(--gray-200);
-            border-radius: 12px;
-            margin: 0 auto 20px;
-            width: 100%;
-            max-width: 280px;
-            height: 280px;
-            background: var(--gray-50);
-            transition: all 0.3s ease;
-        }
-
-        #reader.scanning {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        .status-message {
-            padding: 14px;
-            border-radius: 10px;
-            margin: 16px 0;
-            font-weight: 500;
-            text-align: center;
-            border-left: 4px solid transparent;
-        }
-
-        .status-success {
-            background: #f0fdf4;
-            color: var(--success-dark);
-            border-left-color: var(--success);
-        }
-
-        .status-error {
-            background: #fef2f2;
-            color: var(--error);
-            border-left-color: var(--error);
-        }
-
-        .status-info {
-            background: #eff6ff;
-            color: var(--primary-dark);
-            border-left-color: var(--primary);
-        }
-
-        .vehicle-details {
-            background: var(--gray-50);
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--gray-200);
-        }
-
-        .detail-row:last-child {
-            border-bottom: none;
-        }
-
-        .detail-label {
-            font-weight: 600;
-            color: var(--gray-700);
-            font-size: 0.9rem;
-        }
-
-        .detail-value {
-            color: var(--gray-800);
-            font-weight: 500;
-        }
-
-        .time-controls {
-            background: white;
-            border: 2px solid var(--gray-100);
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-
-        .manual-time-input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid var(--gray-200);
-            border-radius: 8px;
-            font-size: 14px;
-            margin-bottom: 16px;
-            transition: border-color 0.3s ease;
-        }
-
-        .manual-time-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        .time-input-label {
-            display: block;
-            font-weight: 600;
-            color: var(--gray-700);
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-        }
-
-        .btn-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 16px;
-        }
-
-        .btn {
-            padding: 14px 20px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        .btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .btn-out {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-        }
-
-        .btn-in {
-            background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
-            color: white;
-        }
-
-        .btn-reset {
-            background: var(--gray-500);
-            color: white;
-            width: 100%;
-            margin-top: 20px;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .loading-spinner {
-            border: 3px solid var(--gray-200);
-            border-top: 3px solid var(--primary);
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 10px auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .current-time {
-            text-align: center;
-            font-size: 0.8rem;
-            color: var(--gray-500);
-            margin-top: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>QR Gate Pass System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 30px;
+      text-align: center;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    video {
+      width: 320px;
+      height: 320px;
+      border: 2px solid #444;
+      border-radius: 10px;
+    }
+    input, button {
+      margin: 10px;
+      padding: 10px;
+      width: 80%;
+      max-width: 300px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
-    <div class="app-container">
-        <div class="app-header">
-            <div class="app-title">සෞඛ්‍ය අමාත්‍යාංශය</div>
-            <div class="app-subtitle">වාහන ගමන් බලපත්‍ර ස්කෑනර්</div>
-        </div>
+  <h1>🚗 QR Gate Pass System</h1>
 
-        <div class="app-content">
-            <div id="scanner-area">
-                <div class="section">
-                    <h2 class="section-title">QR කේතය ස්කෑන් කරන්න</h2>
-                    <div id="reader"></div>
-                    <div id="status-message" class="status-message status-info">
-                        ස්කෑනරය ආරම්භ වෙමින්...
-                    </div>
-                </div>
-            </div>
+  <video id="preview"></video>
 
-            <div id="details-area" class="hidden">
-                <div class="section">
-                    <h2 class="section-title">වාහන තොරතුරු</h2>
-                    <div class="vehicle-details">
-                        <div class="detail-row">
-                            <span class="detail-label">Booking Ref:</span>
-                            <span class="detail-value" id="disp-ref">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Vehicle:</span>
-                            <span class="detail-value" id="disp-vehicle">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Password:</span>
-                            <span class="detail-value" id="disp-password">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Departure (OUT):</span>
-                            <span class="detail-value" id="disp-out-time">Not recorded</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Return (IN):</span>
-                            <span class="detail-value" id="disp-in-time">Not recorded</span>
-                        </div>
-                    </div>
-                </div>
+  <div class="container">
+    <input type="text" id="bookingRef" placeholder="Booking Ref">
+    <input type="text" id="vehicle" placeholder="Vehicle">
+    <input type="password" id="password" placeholder="Password">
+    <input type="datetime-local" id="inTime">
+    <input type="datetime-local" id="outTime">
 
-                <div class="section">
-                    <h2 class="section-title">වේලාවන් යාවත්කාලීන කරන්න</h2>
-                    <div class="time-controls">
-                        <label class="time-input-label">Manual Time (YYYY-MM-DD HH:MM:SS):</label>
-                        <input type="text" id="manual-time" class="manual-time-input" 
-                               placeholder="උදා: 2024-05-10 15:30:00"
-                               pattern="\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}" 
-                               title="කරුණාකර YYYY-MM-DD HH:MM:SS ආකෘතිය භාවිතා කරන්න.">
-                        <div class="current-time" id="current-time"></div>
-                        
-                        <div class="btn-group">
-                            <button class="btn btn-out" id="btn-out" onclick="recordTime('OUT')">
-                                <span>පිටවීම (OUT)</span>
-                            </button>
-                            <button class="btn btn-in" id="btn-in" onclick="recordTime('IN')">
-                                <span>පිවිසුම (IN)</span>
-                            </button>
-                        </div>
-                        
-                        <div id="result-message" class="status-message"></div>
-                    </div>
-                </div>
-            </div>
+    <button id="saveBtn">Save Data</button>
+  </div>
 
-            <button id="reset-button" class="btn btn-reset hidden" onclick="resetApp()">
-                නැවත ආරම්භ කරන්න
-            </button>
-        </div>
-    </div>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxArRqviIKJePq3VZu7wvLUpzID89-qJ_S17ez1avH6PZ9ZTG87q7ceyageaqlrd0V16g/exec"; // 🔗 Paste your GAS Web App link here!
 
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    // Start QR scanner
+    const html5QrCode = new Html5Qrcode("preview");
 
-    <script>
-        // !!! IMPORTANT: Replace with your deployed GAS Web App URL !!!
-        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzEmNxJHBgB7meHDna6jV-v8aS-bPtpBGKhGNlAvHZYD7w_vseOCgHnq1O5Mav3N66s-w/exec";
-
-        let html5QrcodeScanner = null;
-        let scannedRef = null;
-        let currentBookingRef = null;
-        
-        // Regex for YYYY-MM-DD HH:MM:SS format
-        const TIME_FORMAT_REGEX = /^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}$/;
-
-        // Update current time display
-        function updateCurrentTime() {
-            const now = new Date();
-            // Using toISOString and a little manipulation for a consistent display format
-            const timeString = now.toLocaleDateString('si-LK', { year: 'numeric', month: '2-digit', day: '2-digit' })
-                                + ' ' + now.toLocaleTimeString('si-LK');
-            document.getElementById('current-time').textContent = `Current: ${timeString}`;
-        }
-        
-        // API communication helper
-        async function callGasApi(functionName, params = {}) {
-            // Mock data check (kept for robust testing configuration)
-            if (GAS_WEB_APP_URL.includes("https://script.google.com/macros/s/AKfycbzCOJKP1ndc1zSsQot7SunQfCyUWl5mgjlhhJuf0UZGX9mByOgKwEEqh0MR6HSYpIPTkA/exec") || GAS_WEB_APP_URL.includes("AKfycbzK-LA2Pv87W9tw63jIhDclyVmxJYDsjM9KoCNhtXjGt5y0oVAtuH89fN8AP9bdHR-9Tg")) {
-                console.warn("Using mock data check - GAS_WEB_APP_URL not configured/defaulted");
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                if (functionName === 'getVehicleDetails') {
-                    const mockRef = params.fullScannedText || "MOCK-" + Math.random().toString(36).substr(2, 9);
-                    return { 
-                        success: true, 
-                        bookingRef: mockRef, 
-                        vehicle: "MOCK-123", 
-                        password: "mock123",
-                        outTime: "2024-10-29 10:00:00", 
-                        inTime: "Not recorded",
-                        message: "Mock data loaded successfully"
-                    };
-                }
-                if (functionName === 'processScan') {
-                    // Simulate a successful update with current time
-                    const now = new Date().toLocaleString('si-LK');
-                    return { 
-                        success: true, 
-                        message: `${params.action} time recorded successfully (MOCK) at ${now}` 
-                    };
-                }
-            }
-
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices && devices.length) {
+        html5QrCode.start(
+          devices[0].id,
+          { fps: 10, qrbox: 250 },
+          qrCodeMessage => {
             try {
-                const response = await fetch(GAS_WEB_APP_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ functionName, params })
-                });
-
-                if (!response.ok) {
-                    // Try to read response as text for better error message
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
-                }
-
-                return await response.json();
-            } catch (error) {
-                console.error("API Call Error:", error);
-                return { 
-                    success: false, 
-                    message: "Network/Server error: " + error.message 
-                };
-            }
-        }
-
-        // Start QR scanning
-        function startScanning() {
-            const statusMsg = document.getElementById('status-message');
-            statusMsg.textContent = "කරුණාකර QR කේතය ස්කෑන් කරන්න...";
-            statusMsg.className = 'status-message status-info';
-            
-            // Clear all previous data and hide sections
-            document.getElementById('details-area').classList.add('hidden');
-            document.getElementById('reset-button').classList.add('hidden');
-            document.getElementById('scanner-area').classList.remove('hidden');
-            document.getElementById('result-message').textContent = '';
-            document.getElementById('manual-time').value = '';
-
-            // Ensure scanner is cleared before re-rendering
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.clear().catch(console.error);
-            }
-
-            html5QrcodeScanner = new Html5QrcodeScanner(
-                "reader",
-                { 
-                    fps: 10,
-                    qrbox: { width: 250, height: 250 },
-                    rememberLastUsedCamera: true
-                },
-                false
-            );
-
-            function onScanSuccess(decodedText) {
-                console.log("QR Scanned:", decodedText);
-                scannedRef = decodedText;
-                
-                // Clear scanner and fetch details upon successful scan
-                html5QrcodeScanner.clear().then(() => {
-                    document.getElementById('reader').classList.remove('scanning');
-                    fetchDetails(scannedRef);
-                }).catch(console.error);
-            }
-
-            function onScanFailure(error) {
-                // Silent failure - scanner continues
-            }
-
-            try {
-                html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-                document.getElementById('reader').classList.add('scanning');
-                statusMsg.textContent = "කැමරාව සූදානම්. QR කේතය ස්කෑන් කරන්න...";
-                statusMsg.className = 'status-success';
+              const data = JSON.parse(qrCodeMessage);
+              document.getElementById('bookingRef').value = data.bookingRef || "";
+              document.getElementById('vehicle').value = data.vehicle || "";
+              document.getElementById('password').value = data.password || "";
             } catch (err) {
-                statusMsg.textContent = "ස්කෑනර් දෝෂය: " + err.message;
-                statusMsg.className = 'status-message status-error';
+              alert("Invalid QR data format!");
             }
-        }
+          }
+        );
+      } else {
+        alert("No camera found!");
+      }
+    }).catch(err => alert(err));
 
-        // Fetch vehicle details
-        async function fetchDetails(fullScannedText) {
-            const statusMsg = document.getElementById('status-message');
-            statusMsg.innerHTML = '<div class="loading-spinner"></div>තොරතුරු පරීක්ෂා කෙරේ...';
-            statusMsg.className = 'status-message status-info';
+    // Save Data to Google Sheet via GAS Web App
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const data = {
+        bookingRef: document.getElementById('bookingRef').value,
+        vehicle: document.getElementById('vehicle').value,
+        password: document.getElementById('password').value,
+        inTime: document.getElementById('inTime').value,
+        outTime: document.getElementById('outTime').value
+      };
 
-            const response = await callGasApi('getVehicleDetails', { fullScannedText });
-            
-            if (response.success) {
-                displayDetails(response);
-            } else {
-                handleError(response);
-            }
-        }
+      fetch(GAS_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      });
 
-        // Display vehicle details
-        function displayDetails(response) {
-            const statusMsg = document.getElementById('status-message');
-            statusMsg.textContent = `Ref: ${response.bookingRef} සොයාගන්නා ලදී`;
-            statusMsg.className = 'status-message status-success';
-
-            document.getElementById('disp-ref').textContent = response.bookingRef;
-            document.getElementById('disp-vehicle').textContent = response.vehicle;
-            document.getElementById('disp-password').textContent = response.password;
-            document.getElementById('disp-out-time').textContent = response.outTime;
-            document.getElementById('disp-in-time').textContent = response.inTime;
-
-            currentBookingRef = response.bookingRef;
-
-            document.getElementById('scanner-area').classList.add('hidden');
-            document.getElementById('details-area').classList.remove('hidden');
-            document.getElementById('reset-button').classList.remove('hidden');
-        }
-
-        // Record time (OUT/IN)
-        async function recordTime(action) {
-            const manualTimeInput = document.getElementById('manual-time');
-            const manualTime = manualTimeInput.value.trim();
-            const resultMsg = document.getElementById('result-message');
-            
-            // Client-side validation for manual time format
-            if (manualTime && !TIME_FORMAT_REGEX.test(manualTime)) {
-                resultMsg.textContent = 'වේලා ආකෘතිය වැරදියි. YYYY-MM-DD HH:MM:SS ලෙස ඇතුලත් කරන්න.';
-                resultMsg.className = 'status-message status-error';
-                return;
-            }
-
-            resultMsg.innerHTML = '<div class="loading-spinner"></div>වේලාව වාර්තා කිරීම...';
-            resultMsg.className = 'status-message status-info';
-            
-            // Disable buttons during API call
-            document.getElementById('btn-out').disabled = true;
-            document.getElementById('btn-in').disabled = true;
-
-
-            const response = await callGasApi('processScan', {
-                bookingRef: currentBookingRef,
-                action: action,
-                timeToSend: manualTime
-            });
-            
-            // Re-enable buttons
-            document.getElementById('btn-out').disabled = false;
-            document.getElementById('btn-in').disabled = false;
-
-            if (response.success) {
-                resultMsg.textContent = response.message;
-                resultMsg.className = 'status-message status-success';
-                manualTimeInput.value = ''; // Clear manual input on success
-                // Refresh details to show updated times
-                fetchDetails(scannedRef);
-            } else {
-                resultMsg.textContent = response.message;
-                resultMsg.className = 'status-message status-error';
-            }
-        }
-
-        // Error handler
-        function handleError(response) {
-            const statusMsg = document.getElementById('status-message');
-            statusMsg.textContent = `දෝෂය: ${response.message}`;
-            statusMsg.className = 'status-message status-error';
-            
-            // Give user 3 seconds to read the error before resetting
-            setTimeout(resetApp, 3000);
-        }
-
-        // Reset application
-        function resetApp() {
-            scannedRef = null;
-            currentBookingRef = null;
-            
-            // Clean up UI elements
-            document.getElementById('manual-time').value = '';
-            document.getElementById('result-message').textContent = '';
-            document.getElementById('disp-ref').textContent = '-';
-            document.getElementById('disp-vehicle').textContent = '-';
-            document.getElementById('disp-password').textContent = '-';
-            document.getElementById('disp-out-time').textContent = 'Not recorded';
-            document.getElementById('disp-in-time').textContent = 'Not recorded';
-            
-            // Restart scanning process
-            setTimeout(startScanning, 50); 
-        }
-
-        // Initialize app on load
-        window.addEventListener('load', () => {
-            console.log("Vehicle Scanner App initialized");
-            // Start the time update interval immediately
-            setInterval(updateCurrentTime, 1000);
-            updateCurrentTime(); // Initial call
-            startScanning();
-        });
-    </script>
+      alert("✅ Data sent successfully!");
+    });
+  </script>
 </body>
 </html>
-
