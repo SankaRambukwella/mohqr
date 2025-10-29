@@ -13,11 +13,17 @@
     h1 {
       color: #2c3e50;
     }
-    video {
+    #reader {
       width: 320px;
       height: 320px;
+      margin: 0 auto;
       border: 2px solid #444;
       border-radius: 10px;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
     }
     input, button {
       margin: 10px;
@@ -43,12 +49,27 @@
       align-items: center;
       margin-top: 20px;
     }
+    .camera-status {
+      margin-top: 10px;
+      padding: 8px;
+      border-radius: 4px;
+    }
+    .camera-error {
+      background-color: #ffebee;
+      color: #c62828;
+    }
+    .camera-success {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
   </style>
 </head>
 <body>
   <h1>🚗 QR Gate Pass System</h1>
 
-  <video id="preview"></video>
+  <div id="reader">
+    <div id="camera-status" class="camera-status">Initializing camera...</div>
+  </div>
 
   <div class="container">
     <input type="text" id="bookingRef" placeholder="Booking Ref">
@@ -64,82 +85,105 @@
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxArRqviIKJePq3VZu7wvLUpzID89-qJ_S17ez1avH6PZ9ZTG87q7ceyageaqlrd0V16g/exec"; // 🔗 Paste your GAS Web App link here!
 
-    // Start the QR Scanner
-  const qrScanner = new Html5Qrcode("reader");
-  Html5Qrcode.getCameras().then(devices => {
-    if (devices && devices.length) {
-      const cameraId = devices[0].id;
-      qrScanner.start(
-        cameraId,
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 }
-        },
-        qrMessage => {
-          console.log("QR detected:", qrMessage);
+    // Function to initialize QR scanner
+    function initQRScanner() {
+      const statusElement = document.getElementById('camera-status');
+      
+      Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length) {
+          const cameraId = devices[0].id;
+          
+          // Create QR scanner with the correct element ID
+          const qrScanner = new Html5Qrcode("reader");
+          
+          qrScanner.start(
+            cameraId,
+            {
+              fps: 10,
+              qrbox: { width: 250, height: 250 }
+            },
+            qrMessage => {
+              console.log("QR detected:", qrMessage);
+              
+              let bookingRef = "", vehicle = "", password = "";
 
-          let bookingRef = "", vehicle = "", password = "";
-
-          // ✅ Try to detect JSON format first
-          try {
-            const data = JSON.parse(qrMessage);
-            bookingRef = data.bookingRef || "";
-            vehicle = data.vehicle || "";
-            password = data.password || "";
-          } catch (e) {
-            // ✅ Otherwise, parse plain text format (like your example)
-            const lines = qrMessage.split(/\r?\n/);
-            lines.forEach(line => {
-              if (line.toLowerCase().includes("booking ref")) {
-                bookingRef = line.split(":")[1]?.trim() || "";
-              } else if (line.toLowerCase().includes("vehicle")) {
-                vehicle = line.split(":")[1]?.trim() || "";
-              } else if (line.toLowerCase().includes("password")) {
-                password = line.split(":")[1]?.trim() || "";
+              // ✅ Try to detect JSON format first
+              try {
+                const data = JSON.parse(qrMessage);
+                bookingRef = data.bookingRef || "";
+                vehicle = data.vehicle || "";
+                password = data.password || "";
+              } catch (e) {
+                // ✅ Otherwise, parse plain text format (like your example)
+                const lines = qrMessage.split(/\r?\n/);
+                lines.forEach(line => {
+                  if (line.toLowerCase().includes("booking ref")) {
+                    bookingRef = line.split(":")[1]?.trim() || "";
+                  } else if (line.toLowerCase().includes("vehicle")) {
+                    vehicle = line.split(":")[1]?.trim() || "";
+                  } else if (line.toLowerCase().includes("password")) {
+                    password = line.split(":")[1]?.trim() || "";
+                  }
+                });
               }
-            });
-          }
 
-          if (bookingRef || vehicle || password) {
-            document.getElementById('bookingRef').value = bookingRef;
-            document.getElementById('vehicle').value = vehicle;
-            document.getElementById('password').value = password;
-            alert("✅ QR Scanned Successfully!");
-            qrScanner.stop();
-          } else {
-            alert("⚠ Invalid QR data format!");
-          }
-        },
-        errorMessage => {}
-      );
-    } else {
-      alert("No cameras found on this device!");
+              if (bookingRef || vehicle || password) {
+                document.getElementById('bookingRef').value = bookingRef;
+                document.getElementById('vehicle').value = vehicle;
+                document.getElementById('password').value = password;
+                alert("✅ QR Scanned Successfully!");
+                qrScanner.stop();
+              } else {
+                alert("⚠ Invalid QR data format!");
+              }
+            },
+            errorMessage => {
+              // Ignore scanning errors as they are common during normal operation
+            }
+          ).then(() => {
+            statusElement.textContent = "Camera active - Ready to scan QR codes";
+            statusElement.className = "camera-status camera-success";
+          }).catch(err => {
+            console.error("Failed to start QR scanner:", err);
+            statusElement.textContent = "Failed to start camera: " + err.message;
+            statusElement.className = "camera-status camera-error";
+          });
+          
+        } else {
+          statusElement.textContent = "No cameras found on this device!";
+          statusElement.className = "camera-status camera-error";
+        }
+      }).catch(err => {
+        console.error("Camera detection error:", err);
+        statusElement.textContent = "Camera Error: " + err.message;
+        statusElement.className = "camera-status camera-error";
+      });
     }
-  }).catch(err => alert("Camera Error: " + err));
 
-  // Save Data to GAS
-  document.getElementById('saveBtn').addEventListener('click', () => {
-    const data = {
-      bookingRef: document.getElementById('bookingRef').value,
-      vehicle: document.getElementById('vehicle').value,
-      password: document.getElementById('password').value,
-      inTime: document.getElementById('inTime').value,
-      outTime: document.getElementById('outTime').value
-    };
+    // Initialize QR scanner when page loads
+    document.addEventListener('DOMContentLoaded', initQRScanner);
 
-    fetch(GAS_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data)
+    // Save Data to GAS
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const data = {
+        bookingRef: document.getElementById('bookingRef').value,
+        vehicle: document.getElementById('vehicle').value,
+        password: document.getElementById('password').value,
+        inTime: document.getElementById('inTime').value,
+        outTime: document.getElementById('outTime').value
+      };
+
+      fetch(GAS_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      });
+
+      alert("✅ Data sent to Google Sheet successfully!");
     });
-
-    alert("✅ Data sent to Google Sheet successfully!");
-  });
-</script>
-
+  </script>
 </body>
 </html>
-
