@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <title>Vehicle Scanner App (GitHub/GAS)</title>
+    <link rel="stylesheet" href="Style.css">
+  </head>
+  <body>
+    <div class="container">
+      <h1>වාහන පිවිසුම්/පිටවීම ස්කෑනර්</h1>
+      
+      <div id="scanner-area">
+        <h2>QR ස්කෑන් කරන්න</h2>
+        <div id="reader" style="width:300px; height:300px; border: 1px solid #ccc; margin: 10px auto;"></div>
+        <p id="status-message">ස්කෑනරය ආරම්භ වෙමින් පවතී...</p>
+      </div>
+
+      <div id="details-area" style="display:none;">
+        <h2>වාහන තොරතුරු</h2>
+        <p><strong>Booking Ref:</strong> <span id="disp-ref"></span></p>
+        <p><strong>Vehicle:</strong> <span id="disp-vehicle"></span></p>
+        <p><strong>Password:</strong> <span id="disp-password"></span></p>
+        <p><strong>In Time:</strong> <span id="disp-in-time"></span></p>
+        <p><strong>Out Time:</strong> <span id="disp-out-time"></span></p>
+
+        <h3>වේලාවන් යාවත්කාලීන කරන්න</h3>
+        <label for="manual-time">Manual Time (YYYY-MM-DD HH:MM:SS):</label>
+        <input type="text" id="manual-time" placeholder="උදා: 2024-05-10 15:30:00">
+        
+        <button onclick="recordTime('IN')">වාහනය ඇතුල් කරන්න (IN)</button>
+        <button onclick="recordTime('OUT')">වාහනය පිට කරන්න (OUT)</button>
+
+        <p id="result-message"></p>
+      </div>
+      
+      <button id="reset-button" onclick="resetApp()" style="display:none;">යළි ආරම්භ කරන්න</button>
+    </div>
+
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+    
+    <script src="https://script.google.com/macros/s/AKfycbxUVHMVacvGek331lgaTTFTQYQiFeheYw8h49dXd8ps93eU_3q48OdVVU-xpQM-JXCZ/exec"></script> 
+    <script src="Script.js"></script>
+  </body>
+</html>
