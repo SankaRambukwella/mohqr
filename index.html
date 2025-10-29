@@ -2,8 +2,105 @@
 <html>
   <head>
     <base target="_top">
-    <title>Vehicle Scanner App (GitHub/GAS)</title>
-    <link rel="stylesheet" href="Style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Scanner App</title>
+    <style>
+      body {
+        font-family: 'Inter', Arial, sans-serif;
+        background-color: #f4f4f9;
+        color: #333;
+        margin: 0;
+        padding: 20px;
+        text-align: center;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 20px 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #0056b3;
+        font-size: 1.8em;
+        margin-bottom: 20px;
+      }
+      h2 {
+        border-bottom: 2px solid #eee;
+        padding-bottom: 5px;
+        margin-top: 20px;
+        color: #333;
+      }
+      button {
+        padding: 12px 20px;
+        margin: 8px 5px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: transform 0.1s, box-shadow 0.1s;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      }
+      .btn-out { /* Start of trip (OUT) */
+        background-color: #007bff;
+        color: white;
+      }
+      .btn-in { /* End of trip (IN) */
+        background-color: #28a745;
+        color: white;
+      }
+      .btn-reset {
+        background-color: #6c757d;
+        color: white;
+        margin-top: 15px;
+      }
+      #reader {
+        border: 2px solid #007bff;
+        margin: 15px auto;
+        width: 100%;
+        max-width: 350px;
+        height: 350px;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      #details-area p {
+        text-align: left;
+        padding: 8px 0;
+        border-bottom: 1px dotted #ccc;
+      }
+      #manual-time {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      #status-message, #result-message {
+        padding: 12px;
+        margin: 15px 0;
+        border-radius: 6px;
+        font-weight: 500;
+        text-align: center;
+      }
+      .success {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .error {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      .info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+      }
+    </style>
   </head>
   <body>
     <div class="container">
@@ -11,34 +108,226 @@
       
       <div id="scanner-area">
         <h2>QR ස්කෑන් කරන්න</h2>
-        <div id="reader" style="width:300px; height:300px; border: 1px solid #ccc; margin: 10px auto;"></div>
-        <p id="status-message">ස්කෑනරය ආරම්භ වෙමින් පවතී...</p>
+        <div id="reader"></div>
+        <p id="status-message" class="info">ස්කෑනරය ආරම්භ වෙමින් පවතී...</p>
       </div>
-
+      
       <div id="details-area" style="display:none;">
         <h2>වාහන තොරතුරු</h2>
         <p><strong>Booking Ref:</strong> <span id="disp-ref"></span></p>
         <p><strong>Vehicle:</strong> <span id="disp-vehicle"></span></p>
         <p><strong>Password:</strong> <span id="disp-password"></span></p>
-        <p><strong>In Time:</strong> <span id="disp-in-time"></span></p>
-        <p><strong>Out Time:</strong> <span id="disp-out-time"></span></p>
-
+        <p><strong>Departure Time (OUT):</strong> <span id="disp-out-time"></span></p>
+        <p><strong>Return Time (IN):</strong> <span id="disp-in-time"></span></p>
+        
         <h3>වේලාවන් යාවත්කාලීන කරන්න</h3>
         <label for="manual-time">Manual Time (YYYY-MM-DD HH:MM:SS):</label>
         <input type="text" id="manual-time" placeholder="උදා: 2024-05-10 15:30:00">
         
-        <button onclick="recordTime('IN')">වාහනය ඇතුල් කරන්න (IN)</button>
-        <button onclick="recordTime('OUT')">වාහනය පිට කරන්න (OUT)</button>
-
+        <button class="btn-out" onclick="recordTime('OUT')">වාහනය පිට කරන්න (OUT)</button>
+        <button class="btn-in" onclick="recordTime('IN')">වාහනය ඇතුල් කරන්න (IN)</button>
         <p id="result-message"></p>
       </div>
       
-      <button id="reset-button" onclick="resetApp()" style="display:none;">යළි ආරම්භ කරන්න</button>
+      <button id="reset-button" class="btn-reset" onclick="resetApp()" style="display:none;">යළි ආරම්භ කරන්න</button>
     </div>
-
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
     
-    <script src="https://script.google.com/macros/s/AKfycbxUVHMVacvGek331lgaTTFTQYQiFeheYw8h49dXd8ps93eU_3q48OdVVU-xpQM-JXCZ/exec"></script> 
-    <script src="Script.js"></script>
+    <!-- Load QR Code Library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    
+    <!-- Main Application Script -->
+    <script>
+      // !!! CRITICAL: PASTE YOUR DEPLOYED GAS WEB APP URL HERE !!!
+      // Example: 'https://script.google.com/macros/s/AKfycbxUVHMVacvGek331lgaTTFTQYQiFeheYw8h49dXd8ps93eU_3q48OdVVU-xpQM-JXCZ/exec'
+      const GAS_WEB_APP_URL = "YOUR_DEPLOYED_GAS_API_URL_HERE"; 
+
+      let html5QrcodeScanner = null;
+      let scannedRef = null; // Holds the full QR code text
+      
+      // --- API Communication Helper ---
+      async function callGasApi(functionName, params = {}) {
+        if (GAS_WEB_APP_URL === "YOUR_DEPLOYED_GAS_API_URL_HERE") {
+          // Mock data for testing if URL is not set
+          console.warn("GAS_WEB_APP_URL not set. Using mock data.");
+          if (functionName === 'getVehicleDetails') {
+              const mockRef = params.fullScannedText.match(/Booking Ref: (.*)/)?.[1].trim() || "MOCK-REF";
+              return { success: true, bookingRef: mockRef, vehicle: "MOCK-123", password: "mock", inTime: "Not recorded", outTime: "2024-10-28 09:00:00", message: "Mock data success" };
+          }
+          if (functionName === 'processScan') {
+              return { success: true, message: `${params.action} time recorded successfully (MOCK)` };
+          }
+        }
+
+        try {
+          const response = await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'cors',
+            cache: 'no-cache',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ functionName, params })
+          });
+
+          // Handle HTTP errors first
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP Error ${response.status}: ${errorText}`);
+          }
+
+          const result = await response.json();
+          return result;
+
+        } catch (error) {
+          console.error("API Call Error:", error);
+          handleError({ message: error.message || "Network/API communication failed." });
+          return { success: false, message: error.message || "Network Error" };
+        }
+      }
+
+      // --- Start Scanning Function ---
+      function startScanning() {
+        const statusMsg = document.getElementById('status-message');
+        statusMsg.textContent = "කරුණාකර QR කේතය ස්කෑන් කරන්න...";
+        statusMsg.className = 'info';
+        
+        document.getElementById('details-area').style.display = 'none';
+        document.getElementById('reset-button').style.display = 'none';
+        
+        if (html5QrcodeScanner) {
+          try { html5QrcodeScanner.clear(); } catch (e) { console.log("Scanner already cleared"); }
+        }
+
+        html5QrcodeScanner = new Html5QrcodeScanner(
+          "reader",
+          { 
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0,
+            rememberLastUsedCamera: true
+          },
+          false
+        );
+
+        function onScanSuccess(decodedText, decodedResult) {
+          console.log(`QR Code Scanned: ${decodedText}`);
+          scannedRef = decodedText; // Store full QR data
+          
+          html5QrcodeScanner.clear().then(() => {
+            fetchDetails(scannedRef);
+          }).catch(err => {
+            console.error("Error clearing scanner:", err);
+            fetchDetails(scannedRef);
+          });
+        }
+
+        function onScanFailure(error) { /* Silent */ }
+
+        try {
+          html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+          statusMsg.textContent = "කැමරාව සූදානම්. QR කේතය ස්කෑන් කරන්න...";
+          statusMsg.className = 'success';
+        } catch (err) {
+          statusMsg.textContent = "ස්කෑනරය ආරම්භ කිරීමේ දෝෂයක්: " + err.message;
+          statusMsg.className = 'error';
+          console.error("Scanner render error:", err);
+        }
+      }
+
+      // --- Fetch Details from Backend ---
+      async function fetchDetails(fullScannedText) {
+        const statusMsg = document.getElementById('status-message');
+        statusMsg.textContent = "තොරතුරු පරීක්ෂා කෙරේ...";
+        statusMsg.className = 'info';
+        
+        const response = await callGasApi('getVehicleDetails', { fullScannedText });
+        
+        if (response.success) {
+          displayDetails(response);
+        } else {
+          handleError(response);
+        }
+      }
+
+      // --- Display Details ---
+      function displayDetails(response) {
+        const statusMsg = document.getElementById('status-message');
+        statusMsg.textContent = `Ref: ${response.bookingRef} සොයාගන්නා ලදී.`;
+        statusMsg.className = 'success';
+        
+        document.getElementById('disp-ref').textContent = response.bookingRef;
+        document.getElementById('disp-vehicle').textContent = response.vehicle;
+        document.getElementById('disp-password').textContent = response.password;
+        // Reversed display logic for OUT -> IN flow
+        document.getElementById('disp-out-time').textContent = response.outTime || 'Not recorded';
+        document.getElementById('disp-in-time').textContent = response.inTime || 'Not recorded';
+        
+        document.getElementById('scanner-area').style.display = 'none';
+        document.getElementById('details-area').style.display = 'block';
+        document.getElementById('reset-button').style.display = 'block';
+      }
+
+      // --- Record Time (OUT/IN) ---
+      async function recordTime(action) {
+        const manualTimeInput = document.getElementById('manual-time').value;
+        const timeToSend = manualTimeInput.trim(); // Send empty string if not used
+        const resultMsg = document.getElementById('result-message');
+        
+        resultMsg.textContent = `${action} වේලාව වාර්තා කිරීම ආරම්භ විය...`;
+        resultMsg.className = 'info';
+        
+        // We need the bookingRef from the displayed data for the update call
+        const bookingRef = document.getElementById('disp-ref').textContent;
+
+        const response = await callGasApi('processScan', {
+            bookingRef: bookingRef,
+            action: action,
+            timeToSend: timeToSend
+        });
+
+        if (response.success) {
+          resultMsg.textContent = `සාර්ථකයි: ${response.message}`;
+          resultMsg.className = 'success';
+          // Re-fetch details to update the displayed times
+          fetchDetails(scannedRef);
+        } else {
+          resultMsg.textContent = `අසාර්ථකයි: ${response.message}`;
+          resultMsg.className = 'error';
+        }
+      }
+
+      // --- Error Handler ---
+      function handleError(response) {
+        const statusMsg = document.getElementById('status-message');
+        const errorMsg = response.message || "Unknown backend error occurred.";
+        
+        statusMsg.textContent = `දෝෂය: ${errorMsg}`;
+        statusMsg.className = 'error';
+        
+        document.getElementById('result-message').textContent = "";
+        console.error("Backend error:", response);
+        // After a critical error, automatically reset to allow a new scan
+        setTimeout(resetApp, 3000); 
+      }
+
+      // --- Reset Application ---
+      function resetApp() {
+        scannedRef = null;
+        if (html5QrcodeScanner) {
+          try { html5QrcodeScanner.clear(); } catch (err) { console.log("Scanner already cleared"); }
+        }
+        
+        document.getElementById('details-area').style.display = 'none';
+        document.getElementById('scanner-area').style.display = 'block';
+        document.getElementById('result-message').textContent = '';
+        document.getElementById('manual-time').value = '';
+        
+        setTimeout(startScanning, 500);
+      }
+
+      // --- Initialize on Load ---
+      window.onload = function() {
+        console.log("App loaded. Starting scanner...");
+        startScanning();
+      };
+    </script>
   </body>
 </html>
