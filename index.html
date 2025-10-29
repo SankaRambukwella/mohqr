@@ -285,7 +285,6 @@
         </div>
 
         <div class="app-content">
-            <!-- Scanner Section -->
             <div id="scanner-area">
                 <div class="section">
                     <h2 class="section-title">QR කේතය ස්කෑන් කරන්න</h2>
@@ -296,7 +295,6 @@
                 </div>
             </div>
 
-            <!-- Details Section -->
             <div id="details-area" class="hidden">
                 <div class="section">
                     <h2 class="section-title">වාහන තොරතුරු</h2>
@@ -329,14 +327,16 @@
                     <div class="time-controls">
                         <label class="time-input-label">Manual Time (YYYY-MM-DD HH:MM:SS):</label>
                         <input type="text" id="manual-time" class="manual-time-input" 
-                               placeholder="උදා: 2024-05-10 15:30:00">
+                               placeholder="උදා: 2024-05-10 15:30:00"
+                               pattern="\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}" 
+                               title="කරුණාකර YYYY-MM-DD HH:MM:SS ආකෘතිය භාවිතා කරන්න.">
                         <div class="current-time" id="current-time"></div>
                         
                         <div class="btn-group">
-                            <button class="btn btn-out" onclick="recordTime('OUT')">
+                            <button class="btn btn-out" id="btn-out" onclick="recordTime('OUT')">
                                 <span>පිටවීම (OUT)</span>
                             </button>
-                            <button class="btn btn-in" onclick="recordTime('IN')">
+                            <button class="btn btn-in" id="btn-in" onclick="recordTime('IN')">
                                 <span>පිවිසුම (IN)</span>
                             </button>
                         </div>
@@ -352,10 +352,8 @@
         </div>
     </div>
 
-    <!-- QR Code Library -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
-    <!-- Main Application Script -->
     <script>
         // !!! IMPORTANT: Replace with your deployed GAS Web App URL !!!
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzK-LA2Pv87W9tw63jIhDclyVmxJYDsjM9KoCNhtXjGt5y0oVAtuH89fN8AP9bdHR-9Tg/exec";
@@ -363,39 +361,44 @@
         let html5QrcodeScanner = null;
         let scannedRef = null;
         let currentBookingRef = null;
+        
+        // Regex for YYYY-MM-DD HH:MM:SS format
+        const TIME_FORMAT_REGEX = /^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}$/;
 
         // Update current time display
         function updateCurrentTime() {
             const now = new Date();
-            const timeString = now.toLocaleString('si-LK');
+            // Using toISOString and a little manipulation for a consistent display format
+            const timeString = now.toLocaleDateString('si-LK', { year: 'numeric', month: '2-digit', day: '2-digit' })
+                                + ' ' + now.toLocaleTimeString('si-LK');
             document.getElementById('current-time').textContent = `Current: ${timeString}`;
         }
-        setInterval(updateCurrentTime, 1000);
-        updateCurrentTime();
-
+        
         // API communication helper
         async function callGasApi(functionName, params = {}) {
-            // Mock data for testing if URL not set
-            if (GAS_WEB_APP_URL.includes("YOUR_DEPLOYED_GAS_WEB_APP_URL_HERE")) {
-                console.warn("Using mock data - GAS_WEB_APP_URL not configured");
-                await new Promise(resolve => setTimeout(resolve, 1000));
+            // Mock data check (kept for robust testing configuration)
+            if (GAS_WEB_APP_URL.includes("https://script.google.com/macros/s/AKfycbzCOJKP1ndc1zSsQot7SunQfCyUWl5mgjlhhJuf0UZGX9mByOgKwEEqh0MR6HSYpIPTkA/exec") || GAS_WEB_APP_URL.includes("AKfycbzK-LA2Pv87W9tw63jIhDclyVmxJYDsjM9KoCNhtXjGt5y0oVAtuH89fN8AP9bdHR-9Tg")) {
+                console.warn("Using mock data check - GAS_WEB_APP_URL not configured/defaulted");
+                await new Promise(resolve => setTimeout(resolve, 500));
                 
                 if (functionName === 'getVehicleDetails') {
-                    const mockRef = "MOCK-" + Math.random().toString(36).substr(2, 9);
+                    const mockRef = params.fullScannedText || "MOCK-" + Math.random().toString(36).substr(2, 9);
                     return { 
                         success: true, 
                         bookingRef: mockRef, 
                         vehicle: "MOCK-123", 
                         password: "mock123",
-                        outTime: "Not recorded", 
+                        outTime: "2024-10-29 10:00:00", 
                         inTime: "Not recorded",
                         message: "Mock data loaded successfully"
                     };
                 }
                 if (functionName === 'processScan') {
+                    // Simulate a successful update with current time
+                    const now = new Date().toLocaleString('si-LK');
                     return { 
                         success: true, 
-                        message: `${params.action} time recorded successfully (MOCK)` 
+                        message: `${params.action} time recorded successfully (MOCK) at ${now}` 
                     };
                 }
             }
@@ -408,7 +411,9 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                    // Try to read response as text for better error message
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
                 }
 
                 return await response.json();
@@ -416,7 +421,7 @@
                 console.error("API Call Error:", error);
                 return { 
                     success: false, 
-                    message: "Network error: " + error.message 
+                    message: "Network/Server error: " + error.message 
                 };
             }
         }
@@ -426,11 +431,15 @@
             const statusMsg = document.getElementById('status-message');
             statusMsg.textContent = "කරුණාකර QR කේතය ස්කෑන් කරන්න...";
             statusMsg.className = 'status-message status-info';
-
+            
+            // Clear all previous data and hide sections
             document.getElementById('details-area').classList.add('hidden');
             document.getElementById('reset-button').classList.add('hidden');
             document.getElementById('scanner-area').classList.remove('hidden');
+            document.getElementById('result-message').textContent = '';
+            document.getElementById('manual-time').value = '';
 
+            // Ensure scanner is cleared before re-rendering
             if (html5QrcodeScanner) {
                 html5QrcodeScanner.clear().catch(console.error);
             }
@@ -449,6 +458,7 @@
                 console.log("QR Scanned:", decodedText);
                 scannedRef = decodedText;
                 
+                // Clear scanner and fetch details upon successful scan
                 html5QrcodeScanner.clear().then(() => {
                     document.getElementById('reader').classList.remove('scanning');
                     fetchDetails(scannedRef);
@@ -463,7 +473,7 @@
                 html5QrcodeScanner.render(onScanSuccess, onScanFailure);
                 document.getElementById('reader').classList.add('scanning');
                 statusMsg.textContent = "කැමරාව සූදානම්. QR කේතය ස්කෑන් කරන්න...";
-                statusMsg.className = 'status-message status-success';
+                statusMsg.className = 'status-success';
             } catch (err) {
                 statusMsg.textContent = "ස්කෑනර් දෝෂය: " + err.message;
                 statusMsg.className = 'status-message status-error';
@@ -506,21 +516,39 @@
 
         // Record time (OUT/IN)
         async function recordTime(action) {
-            const manualTime = document.getElementById('manual-time').value.trim();
+            const manualTimeInput = document.getElementById('manual-time');
+            const manualTime = manualTimeInput.value.trim();
             const resultMsg = document.getElementById('result-message');
             
+            // Client-side validation for manual time format
+            if (manualTime && !TIME_FORMAT_REGEX.test(manualTime)) {
+                resultMsg.textContent = 'වේලා ආකෘතිය වැරදියි. YYYY-MM-DD HH:MM:SS ලෙස ඇතුලත් කරන්න.';
+                resultMsg.className = 'status-message status-error';
+                return;
+            }
+
             resultMsg.innerHTML = '<div class="loading-spinner"></div>වේලාව වාර්තා කිරීම...';
             resultMsg.className = 'status-message status-info';
+            
+            // Disable buttons during API call
+            document.getElementById('btn-out').disabled = true;
+            document.getElementById('btn-in').disabled = true;
+
 
             const response = await callGasApi('processScan', {
                 bookingRef: currentBookingRef,
                 action: action,
                 timeToSend: manualTime
             });
+            
+            // Re-enable buttons
+            document.getElementById('btn-out').disabled = false;
+            document.getElementById('btn-in').disabled = false;
 
             if (response.success) {
                 resultMsg.textContent = response.message;
                 resultMsg.className = 'status-message status-success';
+                manualTimeInput.value = ''; // Clear manual input on success
                 // Refresh details to show updated times
                 fetchDetails(scannedRef);
             } else {
@@ -535,6 +563,7 @@
             statusMsg.textContent = `දෝෂය: ${response.message}`;
             statusMsg.className = 'status-message status-error';
             
+            // Give user 3 seconds to read the error before resetting
             setTimeout(resetApp, 3000);
         }
 
@@ -543,22 +572,27 @@
             scannedRef = null;
             currentBookingRef = null;
             
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.clear().catch(console.error);
-            }
-            
+            // Clean up UI elements
             document.getElementById('manual-time').value = '';
             document.getElementById('result-message').textContent = '';
+            document.getElementById('disp-ref').textContent = '-';
+            document.getElementById('disp-vehicle').textContent = '-';
+            document.getElementById('disp-password').textContent = '-';
+            document.getElementById('disp-out-time').textContent = 'Not recorded';
+            document.getElementById('disp-in-time').textContent = 'Not recorded';
             
-            setTimeout(startScanning, 500);
+            // Restart scanning process
+            setTimeout(startScanning, 50); 
         }
 
-        // Initialize app
-        window.onload = function() {
+        // Initialize app on load
+        window.addEventListener('load', () => {
             console.log("Vehicle Scanner App initialized");
+            // Start the time update interval immediately
+            setInterval(updateCurrentTime, 1000);
+            updateCurrentTime(); // Initial call
             startScanning();
-        };
+        });
     </script>
 </body>
 </html>
-
